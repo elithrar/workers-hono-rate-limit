@@ -1,0 +1,103 @@
+{
+  "name": "untyped",
+  "version": "1.4.2",
+  "description": "",
+  "repository": "unjs/untyped",
+  "license": "MIT",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./babel-plugin": {
+      "import": {
+        "types": "./dist/loader/babel.d.mts",
+        "default": "./dist/loader/babel.mjs"
+      },
+      "require": {
+        "types": "./dist/loader/babel.d.cts",
+        "default": "./dist/loader/babel.cjs"
+      }
+    },
+    "./transform": {
+      "import": {
+        "types": "./dist/loader/transform.d.mts",
+        "default": "./dist/loader/transform.mjs"
+      },
+      "require": {
+        "types": "./dist/loader/transform.d.cts",
+        "default": "./dist/loader/transform.cjs"
+      }
+    },
+    "./loader": {
+      "import": {
+        "types": "./dist/loader/loader.d.mts",
+        "default": "./dist/loader/loader.mjs"
+      },
+      "require": {
+        "types": "./dist/loader/loader.d.cts",
+        "default": "./dist/loader/loader.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "untyped": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist",
+    "*.d.ts"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "vitest",
+    "lint": "eslint --ext .js,.ts . && prettier -c src test web",
+    "lint:fix": "eslint --fix --ext .js,.ts . && prettier -w src test web",
+    "prepack": "pnpm build",
+    "release": "pnpm test && changelogen --release --push && npm publish",
+    "test": "pnpm lint && vitest run --coverage",
+    "untyped": "jiti ./src/cli.ts",
+    "web": "nuxi dev web",
+    "web:build": "nuxi generate web"
+  },
+  "dependencies": {
+    "@babel/core": "^7.23.7",
+    "@babel/standalone": "^7.23.8",
+    "@babel/types": "^7.23.6",
+    "defu": "^6.1.4",
+    "jiti": "^1.21.0",
+    "mri": "^1.2.0",
+    "scule": "^1.2.0"
+  },
+  "devDependencies": {
+    "@babel/template": "^7.22.15",
+    "@types/babel__standalone": "latest",
+    "@types/babel__traverse": "latest",
+    "@types/node": "^20.11.5",
+    "@vitest/coverage-v8": "^1.2.1",
+    "@vue/compiler-sfc": "^3.4.15",
+    "changelogen": "^0.5.5",
+    "eslint": "^8.56.0",
+    "eslint-config-unjs": "^0.2.1",
+    "hljs": "^6.2.3",
+    "json-schema": "^0.4.0",
+    "marked": "^11.1.1",
+    "monaco-editor": "^0.45.0",
+    "nuxt": "^3.9.3",
+    "nuxt-windicss": "^2.6.1",
+    "prettier": "^3.2.4",
+    "prismjs": "^1.29.0",
+    "typescript": "^5.3.3",
+    "unbuild": "^2.0.0",
+    "vitest": "^1.2.1"
+  },
+  "packageManager": "pnpm@8.14.1"
+}
