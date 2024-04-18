@@ -1,7 +1,12 @@
 {
   "name": "@elithrar/workers-hono-rate-limit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Hono-compatible middleware for rate limiting requests with Cloudflare Workers.",
+  "scripts": {
+    "test": "vitest --run",
+    "build": "npx unbuild",
+    "publish": "npx unbuild && npm publish"
+  },
   "exports": {
 		".": {
       "types": "./dist/index.d.mts",
@@ -15,10 +20,6 @@
   "files": [
     "dist"
   ],
-  "scripts": {
-    "test": "vitest --run",
-    "build": "npx unbuild"
-  },
   "license": "Apache-2.0",
   "publishConfig": {
     "registry": "https://registry.npmjs.org",
@@ -26,7 +27,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/elithrar/hono-cf-rate-limit.git"
+    "url": "git+https://github.com/elithrar/hono-cf-rate-limit.git"
   },
   "homepage": "https://github.com/elithrar/hono-cf-rate-limit",
   "peerDependencies": {

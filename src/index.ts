@@ -36,22 +36,18 @@ export type RateLimitKeyFunc = {
 
 export const rateLimit = (
   rateLimitBinding: RateLimitBinding,
-  keyFunc: RateLimitKeyFunc,
-  options?: RateLimitOptions
+  keyFunc: RateLimitKeyFunc
 ) => {
   return createMiddleware(async (c: Context, next: Next) => {
     let key = keyFunc(c);
     if (key) {
       let { success } = await rateLimitBinding.limit({ key: key });
+      c.set(RATE_LIMIT_CONTEXT_KEY, success);
 
       if (!success) {
-        c.set(RATE_LIMIT_CONTEXT_KEY, false);
-
-        if (!options?.continueOnRateLimit) {
-          throw new HTTPException(STATUS_TOO_MANY_REQUESTS, {
-            res: c.text("rate limited", { status: STATUS_TOO_MANY_REQUESTS }),
-          });
-        }
+        throw new HTTPException(STATUS_TOO_MANY_REQUESTS, {
+          res: c.text("rate limited", { status: STATUS_TOO_MANY_REQUESTS }),
+        });
       }
     }
 
