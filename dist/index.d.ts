@@ -23,7 +23,7 @@ interface RateLimitOptions {
 type RateLimitKeyFunc = {
     (c: Context): string;
 };
-declare const rateLimit: (binding: RateLimitBinding, keyFunc: RateLimitKeyFunc, options?: RateLimitOptions) => hono.MiddlewareHandler<any, any, {}>;
+declare const rateLimit: (rateLimitBinding: RateLimitBinding, keyFunc: RateLimitKeyFunc, options?: RateLimitOptions) => hono.MiddlewareHandler<any, any, {}>;
 declare const wasRateLimited: (c: Context) => boolean;
 
 export { type LimitFunc, type LimitOptions, type RateLimitBinding, type RateLimitKeyFunc, type RateLimitOptions, type RateLimitResponse, rateLimit, wasRateLimited };

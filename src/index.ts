@@ -1,5 +1,5 @@
 import { createMiddleware } from "hono/factory";
-import type { Context, Next, ErrorHandler } from "hono";
+import type { Context, Next } from "hono";
 import { HTTPException } from "hono/http-exception";
 
 const RATE_LIMIT_CONTEXT_KEY = ".rateLimited";
@@ -35,14 +35,14 @@ export type RateLimitKeyFunc = {
 };
 
 export const rateLimit = (
-  binding: RateLimitBinding,
+  rateLimitBinding: RateLimitBinding,
   keyFunc: RateLimitKeyFunc,
   options?: RateLimitOptions
 ) => {
   return createMiddleware(async (c: Context, next: Next) => {
     let key = keyFunc(c);
     if (key) {
-      let { success } = await binding.limit({ key: key });
+      let { success } = await rateLimitBinding.limit({ key: key });
 
       if (!success) {
         c.set(RATE_LIMIT_CONTEXT_KEY, false);

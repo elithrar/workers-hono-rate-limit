@@ -3,11 +3,11 @@ import { HTTPException } from 'hono/http-exception';
 
 const RATE_LIMIT_CONTEXT_KEY = ".rateLimited";
 const STATUS_TOO_MANY_REQUESTS = 429;
-const rateLimit = (binding, keyFunc, options) => {
+const rateLimit = (rateLimitBinding, keyFunc, options) => {
   return createMiddleware(async (c, next) => {
     let key = keyFunc(c);
     if (key) {
-      let { success } = await binding.limit({ key });
+      let { success } = await rateLimitBinding.limit({ key });
       if (!success) {
         c.set(RATE_LIMIT_CONTEXT_KEY, false);
         if (!options?.continueOnRateLimit) {
