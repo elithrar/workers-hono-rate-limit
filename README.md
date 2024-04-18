@@ -1,4 +1,5 @@
 # @elithrar/workers-hono-rate-limit
+[![Build & Test](https://github.com/elithrar/workers-hono-rate-limit/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/elithrar/workers-hono-rate-limit/actions/workflows/test.yml)
 
 `@elithrar/workers-hono-rate-limit` is Hono middleware that allows you to use Cloudflare Worker's [rate limiting bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/) directly in your Hono applications.
 
