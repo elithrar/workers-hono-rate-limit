@@ -1,43 +1,52 @@
-import { Hono } from 'hono'
-import { RateLimitBinding } from '.'
+import { Hono, Context, MiddlewareHandler } from "hono";
+import { RateLimitBinding, RateLimitKeyFunc, rateLimit } from ".";
 
 type keyConfig = {
-  key: string;
+	key: string;
+};
+
+class PassingRateLimiter implements RateLimitBinding {
+	async limit(_: keyConfig) {
+		return { success: true };
+	}
 }
 
-class GoodRateLimiter implements RateLimitBinding {
-  async limit(_: keyConfig) {
-    return { success: true }
-  }
+class FailingRateLimiter implements RateLimitBinding {
+	async limit(_: keyConfig) {
+		return { success: false };
+	}
 }
 
-class BadRateLimiter implements RateLimitBinding {
-  async limit(_: keyConfig) {
-    return { success: false }
-  }
-}
+const passingRateLimiter: MiddlewareHandler = async (c, next) => {
+	return await rateLimit(new PassingRateLimiter(), () => {
+		return "someKey";
+	})(c, next);
+};
 
+const failingRateLimiter: MiddlewareHandler = async (c, next) => {
+	return await rateLimit(new FailingRateLimiter(), () => {
+		return "someKey";
+	})(c, next);
+};
 
-describe('rateLimiting works as expected', () => {
-  const app = new Hono()
+describe("rate limiting works as expected", () => {
+	const app = new Hono();
 
-  app.use('/hello/*', hello())
-  app.get('/hello/foo', (c) => c.text('foo'))
+	app.use("/passing/*", passingRateLimiter);
+	app.get("/passing/hello", (c) => c.text(`${c.req.url}`));
 
-  app.use('/x/*', hello('X'))
-  app.get('/x/foo', (c) => c.text('foo'))
+	app.use("/failing/*", failingRateLimiter);
+	app.get("/failing/hello", (c) => c.text(`${c.req.url}`));
 
-  it('should rate limit', async () => {
-    const res = await app.request('http://localhost/hello/foo')
-    expect(res).not.toBeNull()
-    expect(res.status).toBe(200)
-    expect(res.headers.get('X-Message')).toBe('Hello!')
-  })
+	it("should not be rate limited", async () => {
+		const res = await app.request("http://localhost/passing/hello");
+		expect(res).not.toBeNull();
+		expect(res.status).toBe(200);
+	});
 
-  it('should not rate limit', async () => {
-    const res = await app.request('http://localhost/x/foo')
-    expect(res).not.toBeNull()
-    expect(res.status).toBe(200)
-    expect(res.headers.get('X-Message')).toBe('X')
-  })
-})
+	it("should be rate limited", async () => {
+		const res = await app.request("http://localhost/failing/hello");
+		expect(res).not.toBeNull();
+		expect(res.status).toBe(429);
+	});
+});

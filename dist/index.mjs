@@ -6,6 +6,9 @@ const STATUS_TOO_MANY_REQUESTS = 429;
 const rateLimit = (rateLimitBinding, keyFunc) => {
   return createMiddleware(async (c, next) => {
     let key = keyFunc(c);
+    if (!key) {
+      console.warn("the provided keyFunc returned an empty rate limiting key: bypassing rate limits");
+    }
     if (key) {
       let { success } = await rateLimitBinding.limit({ key });
       c.set(RATE_LIMIT_CONTEXT_KEY, success);
