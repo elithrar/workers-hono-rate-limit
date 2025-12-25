@@ -31,10 +31,11 @@ type RateLimitKeyFunc = (c: Context) => string | Promise<string>;
  */
 declare const rateLimit: (rateLimitBinding: RateLimitBinding, keyFunc: RateLimitKeyFunc) => MiddlewareHandler;
 /**
- * Check if the current request was rate limited.
- * Returns true if the request passed rate limiting, false if it was limited.
+ * Check if the current request passed rate limiting.
+ * Returns true if the request was allowed through, false if it was rate limited,
+ * or undefined if the rate limiting middleware was not applied.
  */
-declare const wasRateLimited: (c: Context) => boolean;
+declare const rateLimitPassed: (c: Context) => boolean | undefined;
 
-export { rateLimit, wasRateLimited };
+export { rateLimit, rateLimitPassed };
 export type { RateLimitBinding, RateLimitKeyFunc };

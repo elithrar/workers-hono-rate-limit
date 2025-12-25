@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
-import { RateLimitBinding, rateLimit, wasRateLimited } from "./index";
+import { RateLimitBinding, rateLimit, rateLimitPassed } from "./index";
 
 // =============================================================================
 // Mock Rate Limiters (using factory functions for better serialization)
@@ -165,7 +165,7 @@ describe("rateLimit middleware", () => {
 	});
 });
 
-describe("wasRateLimited helper", () => {
+describe("rateLimitPassed helper", () => {
 	it("returns true when request passed rate limiting", async () => {
 		const app = new Hono();
 		let rateLimitStatus: boolean | undefined;
@@ -175,7 +175,7 @@ describe("wasRateLimited helper", () => {
 
 		app.use("/api/*", rateLimiter);
 		app.get("/api/hello", (c) => {
-			rateLimitStatus = wasRateLimited(c);
+			rateLimitStatus = rateLimitPassed(c);
 			return c.text("Hello");
 		});
 
@@ -183,12 +183,12 @@ describe("wasRateLimited helper", () => {
 		expect(rateLimitStatus).toBe(true);
 	});
 
-	it("is undefined when rate limiting middleware was not applied", async () => {
+	it("returns undefined when rate limiting middleware was not applied", async () => {
 		const app = new Hono();
 		let rateLimitStatus: boolean | undefined;
 
 		app.get("/api/hello", (c) => {
-			rateLimitStatus = wasRateLimited(c);
+			rateLimitStatus = rateLimitPassed(c);
 			return c.text("Hello");
 		});
 

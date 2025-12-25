@@ -58,9 +58,10 @@ export const rateLimit = (
 };
 
 /**
- * Check if the current request was rate limited.
- * Returns true if the request passed rate limiting, false if it was limited.
+ * Check if the current request passed rate limiting.
+ * Returns true if the request was allowed through, false if it was rate limited,
+ * or undefined if the rate limiting middleware was not applied.
  */
-export const wasRateLimited = (c: Context): boolean => {
-	return c.get(RATE_LIMIT_CONTEXT_KEY) as boolean;
+export const rateLimitPassed = (c: Context): boolean | undefined => {
+	return c.get(RATE_LIMIT_CONTEXT_KEY) as boolean | undefined;
 };

@@ -21,8 +21,8 @@ const rateLimit = (rateLimitBinding, keyFunc) => {
     await next();
   });
 };
-const wasRateLimited = (c) => {
+const rateLimitPassed = (c) => {
   return c.get(RATE_LIMIT_CONTEXT_KEY);
 };
 
-export { rateLimit, wasRateLimited };
+export { rateLimit, rateLimitPassed };
