@@ -1,9 +1,10 @@
 {
 	"name": "@elithrar/workers-hono-rate-limit",
 	"version": "0.4.3",
+	"type": "module",
 	"description": "Hono-compatible middleware for rate limiting requests with Cloudflare Workers.",
 	"scripts": {
-		"test": "vitest --run",
+		"test": "vitest run",
 		"build": "npx unbuild",
 		"publish": "npx unbuild"
 	},
@@ -26,20 +27,18 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/elithrar/hono-cf-rate-limit.git"
+		"url": "git+https://github.com/elithrar/workers-hono-rate-limit.git"
 	},
-	"homepage": "https://github.com/elithrar/hono-cf-rate-limit",
+	"homepage": "https://github.com/elithrar/workers-hono-rate-limit",
 	"peerDependencies": {
-		"hono": "*"
+		"hono": ">=4.0.0"
 	},
 	"devDependencies": {
-		"@types/jest": "^29.5.12",
-		"hono": "^3.12.12",
-		"unbuild": "^2.0.0",
-		"vitest": "^1.0.4"
-	},
-	"dependencies": {
-		"@cloudflare/workers-types": "^4.20240405.0",
-		"jest": "^29.7.0"
+		"@cloudflare/vitest-pool-workers": "^0.11.1",
+		"@cloudflare/workers-types": "^4.20251225.0",
+		"hono": "^4.11.2",
+		"unbuild": "^3.6.1",
+		"vitest": "^3.2.0",
+		"wrangler": "^4.56.0"
 	}
 }

@@ -1,0 +1,5 @@
+{
+	"name": "workers-hono-rate-limit-test",
+	"main": "src/test-worker.ts",
+	"compatibility_date": "2024-12-25"
+}

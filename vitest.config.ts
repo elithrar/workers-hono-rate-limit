@@ -1,8 +1,15 @@
-/// <reference types="vitest" />
-import { defineConfig } from 'vitest/config'
+import { defineWorkersConfig } from "@cloudflare/vitest-pool-workers/config";
 
-export default defineConfig({
-  test: {
-    globals: true,
-  },
-})
+export default defineWorkersConfig({
+	test: {
+		globals: true,
+		poolOptions: {
+			workers: {
+				main: "./src/test-worker.ts",
+				miniflare: {
+					compatibilityDate: "2024-12-25",
+				},
+			},
+		},
+	},
+});
