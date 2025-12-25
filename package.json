@@ -1,6 +1,6 @@
 {
 	"name": "@elithrar/workers-hono-rate-limit",
-	"version": "0.4.3",
+	"version": "0.5.1",
 	"type": "module",
 	"description": "Hono-compatible middleware for rate limiting requests with Cloudflare Workers.",
 	"scripts": {
@@ -39,6 +39,6 @@
 		"hono": "^4.11.2",
 		"unbuild": "^3.6.1",
 		"vitest": "^3.2.0",
-		"wrangler": "^4.56.0"
+		"wrangler": "^4.54.0"
 	}
 }
