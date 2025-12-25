@@ -1,6 +1,6 @@
 # @elithrar/workers-hono-rate-limit
 
-[![Build & Test](https://github.com/elithrar/workers-hono-rate-limit/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/elithrar/workers-hono-rate-limit/actions/workflows/test.yml)
+[![Build & Test](https://github.com/elithrar/workers-hono-rate-limit/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/elithrar/workers-hono-rate-limit/actions/workflows/build.yml)
 
 Hono middleware for Cloudflare Worker's [rate limiting bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/).
 
