@@ -1,13 +1,15 @@
-name: Build
+name: Release
 
 on:
   push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,7 +18,9 @@ jobs:
         with:
           node-version: 22.x
           cache: "npm"
+          registry-url: https://registry.npmjs.org
       - run: npm ci
-      - run: npm run format
-      - run: npm run build
       - run: npm test
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

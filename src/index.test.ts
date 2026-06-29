@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -51,8 +51,7 @@ function createTrackingRateLimiter(maxRequests = 10) {
 describe("rateLimit middleware", () => {
 	it("allows requests when rate limit is not exceeded", async () => {
 		const app = new Hono();
-		const rateLimiter: MiddlewareHandler = (c, next) =>
-			rateLimit(createPassingRateLimiter(), () => "testKey")(c, next);
+		const rateLimiter: MiddlewareHandler = (c, next) => rateLimit(createPassingRateLimiter(), () => "testKey")(c, next);
 
 		app.use("/api/*", rateLimiter);
 		app.get("/api/hello", (c) => c.text("Hello"));
@@ -64,8 +63,7 @@ describe("rateLimit middleware", () => {
 
 	it("returns 429 when rate limit is exceeded", async () => {
 		const app = new Hono();
-		const rateLimiter: MiddlewareHandler = (c, next) =>
-			rateLimit(createFailingRateLimiter(), () => "testKey")(c, next);
+		const rateLimiter: MiddlewareHandler = (c, next) => rateLimit(createFailingRateLimiter(), () => "testKey")(c, next);
 
 		app.use("/api/*", rateLimiter);
 		app.get("/api/hello", (c) => c.text("Hello"));
@@ -79,8 +77,7 @@ describe("rateLimit middleware", () => {
 		const app = new Hono();
 		const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-		const rateLimiter: MiddlewareHandler = (c, next) =>
-			rateLimit(createFailingRateLimiter(), () => "")(c, next);
+		const rateLimiter: MiddlewareHandler = (c, next) => rateLimit(createFailingRateLimiter(), () => "")(c, next);
 
 		app.use("/api/*", rateLimiter);
 		app.get("/api/hello", (c) => c.text("Hello"));
@@ -88,9 +85,7 @@ describe("rateLimit middleware", () => {
 		const res = await app.request("http://localhost/api/hello");
 		expect(res.status).toBe(200);
 		expect(await res.text()).toBe("Hello");
-		expect(consoleSpy).toHaveBeenCalledWith(
-			"the provided keyFunc returned an empty rate limiting key: bypassing rate limits"
-		);
+		expect(consoleSpy).toHaveBeenCalledWith("the provided keyFunc returned an empty rate limiting key: bypassing rate limits");
 
 		consoleSpy.mockRestore();
 	});
@@ -100,8 +95,7 @@ describe("rateLimit middleware", () => {
 		const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 		const limitSpy = vi.fn(async () => ({ success: false }));
 
-		const rateLimiter: MiddlewareHandler = (c, next) =>
-			rateLimit({ limit: limitSpy }, () => "   \t\n")(c, next);
+		const rateLimiter: MiddlewareHandler = (c, next) => rateLimit({ limit: limitSpy }, () => "   \t\n")(c, next);
 
 		app.use("/api/*", rateLimiter);
 		app.get("/api/hello", (c) => c.text("Hello"));
@@ -109,9 +103,7 @@ describe("rateLimit middleware", () => {
 		const res = await app.request("http://localhost/api/hello");
 		expect(res.status).toBe(200);
 		expect(limitSpy).not.toHaveBeenCalled();
-		expect(consoleSpy).toHaveBeenCalledWith(
-			"the provided keyFunc returned an empty rate limiting key: bypassing rate limits"
-		);
+		expect(consoleSpy).toHaveBeenCalledWith("the provided keyFunc returned an empty rate limiting key: bypassing rate limits");
 
 		consoleSpy.mockRestore();
 	});
@@ -131,6 +123,18 @@ describe("rateLimit middleware", () => {
 		expect(await res.text()).toBe("too many requests, try again later");
 	});
 
+	it("falls back to the default 429 message when message is empty", async () => {
+		const app = new Hono();
+		const rateLimiter: MiddlewareHandler = (c, next) => rateLimit(createFailingRateLimiter(), () => "testKey", { message: "   " })(c, next);
+
+		app.use("/api/*", rateLimiter);
+		app.get("/api/hello", (c) => c.text("Hello"));
+
+		const res = await app.request("http://localhost/api/hello");
+		expect(res.status).toBe(429);
+		expect(await res.text()).toBe("rate limited");
+	});
+
 	it("trims keys before passing them to the rate limiter", async () => {
 		const app = new Hono();
 		let capturedKey = "";
@@ -142,8 +146,7 @@ describe("rateLimit middleware", () => {
 			},
 		};
 
-		const rateLimiter: MiddlewareHandler = (c, next) =>
-			rateLimit(trackingLimiter, () => "  padded-key  ")(c, next);
+		const rateLimiter: MiddlewareHandler = (c, next) => rateLimit(trackingLimiter, () => "  padded-key  ")(c, next);
 
 		app.use("/api/*", rateLimiter);
 		app.get("/api/hello", (c) => c.text("Hello"));
@@ -228,8 +231,7 @@ describe("rateLimitPassed helper", () => {
 		const app = new Hono();
 		let rateLimitStatus: boolean | undefined;
 
-		const rateLimiter: MiddlewareHandler = (c, next) =>
-			rateLimit(createPassingRateLimiter(), () => "testKey")(c, next);
+		const rateLimiter: MiddlewareHandler = (c, next) => rateLimit(createPassingRateLimiter(), () => "testKey")(c, next);
 
 		app.use("/api/*", rateLimiter);
 		app.get("/api/hello", (c) => {
@@ -245,8 +247,7 @@ describe("rateLimitPassed helper", () => {
 		const app = new Hono();
 		let rateLimitStatus: boolean | undefined;
 
-		const rateLimiter: MiddlewareHandler = (c, next) =>
-			rateLimit(createFailingRateLimiter(), () => "testKey")(c, next);
+		const rateLimiter: MiddlewareHandler = (c, next) => rateLimit(createFailingRateLimiter(), () => "testKey")(c, next);
 
 		app.use("/api/*", rateLimiter);
 		app.onError((err, c) => {
@@ -411,7 +412,7 @@ describe("rateLimit integration behavior", () => {
 			{
 				headers: { Authorization: "Bearer token123" },
 			},
-			env
+			env,
 		);
 
 		expect(res.status).toBe(200);

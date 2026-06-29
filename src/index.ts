@@ -39,6 +39,11 @@ export interface RateLimitOptions {
 
 const normalizeRateLimitKey = (rawKey: string): string => rawKey.trim();
 
+const resolveRateLimitMessage = (message: string | undefined): string => {
+	const trimmed = message?.trim();
+	return trimmed || DEFAULT_RATE_LIMIT_MESSAGE;
+};
+
 /**
  * Creates a rate limiting middleware for Hono applications.
  *
@@ -56,9 +61,9 @@ const normalizeRateLimitKey = (rawKey: string): string => rawKey.trim();
 export const rateLimit = (
 	rateLimitBinding: RateLimitBinding,
 	keyFunc: RateLimitKeyFunc,
-	options: RateLimitOptions = {}
+	options: RateLimitOptions = {},
 ): MiddlewareHandler<{ Variables: RateLimitVariables }> => {
-	const message = options.message ?? DEFAULT_RATE_LIMIT_MESSAGE;
+	const message = resolveRateLimitMessage(options.message);
 
 	return createMiddleware<{ Variables: RateLimitVariables }>(async (c, next) => {
 		const key = normalizeRateLimitKey(await keyFunc(c));
@@ -84,6 +89,6 @@ export const rateLimit = (
  * Returns true if the request was allowed through, false if it was rate limited,
  * or undefined if the rate limiting middleware was not applied.
  */
-export const rateLimitPassed = (c: Context): boolean | undefined => {
+export const rateLimitPassed = (c: Context<{ Variables: RateLimitVariables }>): boolean | undefined => {
 	return c.get(RATE_LIMIT_CONTEXT_KEY);
 };

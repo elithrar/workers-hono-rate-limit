@@ -4,6 +4,8 @@
 
 Hono middleware for Cloudflare Worker's [rate limiting bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/).
 
+Tested with Hono 4.12.x. Requires Hono `>=4.4.0` for `createMiddleware` variable typing.
+
 ## Install
 
 ```sh
@@ -47,6 +49,16 @@ app.get("/", (c) => c.text("hello!"));
 export default app;
 ```
 
+Because the rate limiter binding comes from `c.env`, the middleware must be applied inside a route handler. You do not need to create a new middleware instance on every request — define the wrapper once and reuse it:
+
+```ts
+import type { Context, Next } from "hono";
+
+const withRateLimit = (c: Context, next: Next) => rateLimit(c.env.RATE_LIMITER, getKey)(c, next);
+
+app.use("/api/*", withRateLimit);
+```
+
 You can create multiple `rateLimit` instances with different configurations and key functions for each use-case, or apply the same instance to multiple route patterns via `app.use`.
 
 ### Custom 429 message
@@ -54,14 +66,14 @@ You can create multiple `rateLimit` instances with different configurations and 
 By default, rate-limited requests receive a `429` response with the body `rate limited`. You can override this with the optional `message` option:
 
 ```ts
-app.use(
-	"/api/*",
-	(c, next) =>
-		rateLimit(c.env.RATE_LIMITER, getKey, {
-			message: "too many requests, try again later",
-		})(c, next)
+app.use("/api/*", (c, next) =>
+	rateLimit(c.env.RATE_LIMITER, getKey, {
+		message: "too many requests, try again later",
+	})(c, next),
 );
 ```
+
+Whitespace-only values fall back to the default message.
 
 ### Async Key Functions
 
@@ -74,11 +86,16 @@ const getKey: RateLimitKeyFunc = async (c) => {
 };
 ```
 
+### Checking rate limit status
+
+Handlers chained after the middleware can read `c.var.rateLimitPassed`, or use the `rateLimitPassed(c)` helper.
+
 ## Notes
 
 - The key should represent a unique characteristic of a user or class of user. Good choices include API keys, user IDs, or tenant IDs.
 - Avoid using IP addresses or locations as keys—these can be shared by many users.
-- If your `keyFunc` returns an empty or whitespace-only string, rate limiting is bypassed for that request (with a console warning). Keys are trimmed before being passed to the rate limiter.
+- If your `keyFunc` returns an empty or whitespace-only string, rate limiting is **bypassed** for that request (with a console warning). Keys are trimmed before being passed to the rate limiter.
+- To rate limit unauthenticated traffic, return a fixed bucket name instead of an empty string — for example `(c) => c.req.header("Authorization") || "unauthenticated"`.
 
 ## License
 
