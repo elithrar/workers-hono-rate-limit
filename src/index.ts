@@ -4,7 +4,7 @@ import { HTTPException } from "hono/http-exception";
 
 const RATE_LIMIT_CONTEXT_KEY = "rateLimitPassed";
 const STATUS_TOO_MANY_REQUESTS = 429;
-const DEFAULT_RATE_LIMIT_MESSAGE = "rate limited";
+export const DEFAULT_RATE_LIMIT_MESSAGE = "rate limited";
 
 /**
  * Context variables set by the rate limiting middleware.
@@ -30,10 +30,21 @@ export interface RateLimitBinding {
 export type RateLimitKeyFunc = (c: Context) => string | Promise<string>;
 
 /**
+ * Optional configuration for the rate limiting middleware.
+ */
+export interface RateLimitOptions {
+	/** Response body when a request is rate limited. Defaults to `"rate limited"`. */
+	message?: string;
+}
+
+const normalizeRateLimitKey = (rawKey: string): string => rawKey.trim();
+
+/**
  * Creates a rate limiting middleware for Hono applications.
  *
  * @param rateLimitBinding - The rate limit binding from your Worker's env
  * @param keyFunc - Function that returns the key to rate limit on
+ * @param options - Optional middleware configuration
  * @returns Hono middleware handler
  *
  * @example
@@ -44,10 +55,13 @@ export type RateLimitKeyFunc = (c: Context) => string | Promise<string>;
  */
 export const rateLimit = (
 	rateLimitBinding: RateLimitBinding,
-	keyFunc: RateLimitKeyFunc
+	keyFunc: RateLimitKeyFunc,
+	options: RateLimitOptions = {}
 ): MiddlewareHandler<{ Variables: RateLimitVariables }> => {
+	const message = options.message ?? DEFAULT_RATE_LIMIT_MESSAGE;
+
 	return createMiddleware<{ Variables: RateLimitVariables }>(async (c, next) => {
-		const key = await keyFunc(c);
+		const key = normalizeRateLimitKey(await keyFunc(c));
 		if (!key) {
 			console.warn("the provided keyFunc returned an empty rate limiting key: bypassing rate limits");
 			await next();
@@ -58,9 +72,7 @@ export const rateLimit = (
 		c.set(RATE_LIMIT_CONTEXT_KEY, success);
 
 		if (!success) {
-			throw new HTTPException(STATUS_TOO_MANY_REQUESTS, {
-				message: DEFAULT_RATE_LIMIT_MESSAGE,
-			});
+			throw new HTTPException(STATUS_TOO_MANY_REQUESTS, { message });
 		}
 
 		await next();

@@ -49,6 +49,20 @@ export default app;
 
 You can create multiple `rateLimit` instances with different configurations and key functions for each use-case, or apply the same instance to multiple route patterns via `app.use`.
 
+### Custom 429 message
+
+By default, rate-limited requests receive a `429` response with the body `rate limited`. You can override this with the optional `message` option:
+
+```ts
+app.use(
+	"/api/*",
+	(c, next) =>
+		rateLimit(c.env.RATE_LIMITER, getKey, {
+			message: "too many requests, try again later",
+		})(c, next)
+);
+```
+
 ### Async Key Functions
 
 The `keyFunc` can also be async if you need to look up user information:
@@ -64,7 +78,7 @@ const getKey: RateLimitKeyFunc = async (c) => {
 
 - The key should represent a unique characteristic of a user or class of user. Good choices include API keys, user IDs, or tenant IDs.
 - Avoid using IP addresses or locations as keys—these can be shared by many users.
-- If your `keyFunc` returns an empty string, rate limiting is bypassed for that request.
+- If your `keyFunc` returns an empty or whitespace-only string, rate limiting is bypassed for that request (with a console warning). Keys are trimmed before being passed to the rate limiter.
 
 ## License
 

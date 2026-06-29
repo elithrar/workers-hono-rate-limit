@@ -95,6 +95,63 @@ describe("rateLimit middleware", () => {
 		consoleSpy.mockRestore();
 	});
 
+	it("bypasses rate limiting when keyFunc returns whitespace-only key", async () => {
+		const app = new Hono();
+		const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+		const limitSpy = vi.fn(async () => ({ success: false }));
+
+		const rateLimiter: MiddlewareHandler = (c, next) =>
+			rateLimit({ limit: limitSpy }, () => "   \t\n")(c, next);
+
+		app.use("/api/*", rateLimiter);
+		app.get("/api/hello", (c) => c.text("Hello"));
+
+		const res = await app.request("http://localhost/api/hello");
+		expect(res.status).toBe(200);
+		expect(limitSpy).not.toHaveBeenCalled();
+		expect(consoleSpy).toHaveBeenCalledWith(
+			"the provided keyFunc returned an empty rate limiting key: bypassing rate limits"
+		);
+
+		consoleSpy.mockRestore();
+	});
+
+	it("returns a custom 429 message when configured", async () => {
+		const app = new Hono();
+		const rateLimiter: MiddlewareHandler = (c, next) =>
+			rateLimit(createFailingRateLimiter(), () => "testKey", {
+				message: "too many requests, try again later",
+			})(c, next);
+
+		app.use("/api/*", rateLimiter);
+		app.get("/api/hello", (c) => c.text("Hello"));
+
+		const res = await app.request("http://localhost/api/hello");
+		expect(res.status).toBe(429);
+		expect(await res.text()).toBe("too many requests, try again later");
+	});
+
+	it("trims keys before passing them to the rate limiter", async () => {
+		const app = new Hono();
+		let capturedKey = "";
+
+		const trackingLimiter: RateLimitBinding = {
+			limit: async ({ key }) => {
+				capturedKey = key;
+				return { success: true };
+			},
+		};
+
+		const rateLimiter: MiddlewareHandler = (c, next) =>
+			rateLimit(trackingLimiter, () => "  padded-key  ")(c, next);
+
+		app.use("/api/*", rateLimiter);
+		app.get("/api/hello", (c) => c.text("Hello"));
+
+		await app.request("http://localhost/api/hello");
+		expect(capturedKey).toBe("padded-key");
+	});
+
 	it("supports async keyFunc", async () => {
 		const app = new Hono();
 		const rateLimiter: MiddlewareHandler = (c, next) =>

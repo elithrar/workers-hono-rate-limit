@@ -1,5 +1,6 @@
 import { Context, MiddlewareHandler } from 'hono';
 
+declare const DEFAULT_RATE_LIMIT_MESSAGE = "rate limited";
 /**
  * Context variables set by the rate limiting middleware.
  * Chain this middleware before handlers to access `c.var.rateLimitPassed`.
@@ -25,10 +26,18 @@ interface RateLimitBinding {
  */
 type RateLimitKeyFunc = (c: Context) => string | Promise<string>;
 /**
+ * Optional configuration for the rate limiting middleware.
+ */
+interface RateLimitOptions {
+    /** Response body when a request is rate limited. Defaults to `"rate limited"`. */
+    message?: string;
+}
+/**
  * Creates a rate limiting middleware for Hono applications.
  *
  * @param rateLimitBinding - The rate limit binding from your Worker's env
  * @param keyFunc - Function that returns the key to rate limit on
+ * @param options - Optional middleware configuration
  * @returns Hono middleware handler
  *
  * @example
@@ -37,7 +46,7 @@ type RateLimitKeyFunc = (c: Context) => string | Promise<string>;
  * app.use("*", (c, next) => rateLimit(c.env.RATE_LIMITER, getKey)(c, next));
  * ```
  */
-declare const rateLimit: (rateLimitBinding: RateLimitBinding, keyFunc: RateLimitKeyFunc) => MiddlewareHandler<{
+declare const rateLimit: (rateLimitBinding: RateLimitBinding, keyFunc: RateLimitKeyFunc, options?: RateLimitOptions) => MiddlewareHandler<{
     Variables: RateLimitVariables;
 }>;
 /**
@@ -47,5 +56,5 @@ declare const rateLimit: (rateLimitBinding: RateLimitBinding, keyFunc: RateLimit
  */
 declare const rateLimitPassed: (c: Context) => boolean | undefined;
 
-export { rateLimit, rateLimitPassed };
-export type { RateLimitBinding, RateLimitKeyFunc, RateLimitVariables };
+export { DEFAULT_RATE_LIMIT_MESSAGE, rateLimit, rateLimitPassed };
+export type { RateLimitBinding, RateLimitKeyFunc, RateLimitOptions, RateLimitVariables };
