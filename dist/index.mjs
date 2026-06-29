@@ -1,8 +1,9 @@
 import { createMiddleware } from 'hono/factory';
 import { HTTPException } from 'hono/http-exception';
 
-const RATE_LIMIT_CONTEXT_KEY = ".rateLimited";
+const RATE_LIMIT_CONTEXT_KEY = "rateLimitPassed";
 const STATUS_TOO_MANY_REQUESTS = 429;
+const DEFAULT_RATE_LIMIT_MESSAGE = "rate limited";
 const rateLimit = (rateLimitBinding, keyFunc) => {
   return createMiddleware(async (c, next) => {
     const key = await keyFunc(c);
@@ -15,7 +16,7 @@ const rateLimit = (rateLimitBinding, keyFunc) => {
     c.set(RATE_LIMIT_CONTEXT_KEY, success);
     if (!success) {
       throw new HTTPException(STATUS_TOO_MANY_REQUESTS, {
-        res: new Response("rate limited", { status: STATUS_TOO_MANY_REQUESTS })
+        message: DEFAULT_RATE_LIMIT_MESSAGE
       });
     }
     await next();

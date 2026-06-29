@@ -1,7 +1,15 @@
 import { Context, MiddlewareHandler } from 'hono';
 
 /**
+ * Context variables set by the rate limiting middleware.
+ * Chain this middleware before handlers to access `c.var.rateLimitPassed`.
+ */
+type RateLimitVariables = {
+    rateLimitPassed: boolean;
+};
+/**
  * Rate limiting binding as defined by Cloudflare Workers.
+ * Compatible with the `RateLimit` interface from `@cloudflare/workers-types`.
  * @see https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
  */
 interface RateLimitBinding {
@@ -29,7 +37,9 @@ type RateLimitKeyFunc = (c: Context) => string | Promise<string>;
  * app.use("*", (c, next) => rateLimit(c.env.RATE_LIMITER, getKey)(c, next));
  * ```
  */
-declare const rateLimit: (rateLimitBinding: RateLimitBinding, keyFunc: RateLimitKeyFunc) => MiddlewareHandler;
+declare const rateLimit: (rateLimitBinding: RateLimitBinding, keyFunc: RateLimitKeyFunc) => MiddlewareHandler<{
+    Variables: RateLimitVariables;
+}>;
 /**
  * Check if the current request passed rate limiting.
  * Returns true if the request was allowed through, false if it was rate limited,
@@ -38,4 +48,4 @@ declare const rateLimit: (rateLimitBinding: RateLimitBinding, keyFunc: RateLimit
 declare const rateLimitPassed: (c: Context) => boolean | undefined;
 
 export { rateLimit, rateLimitPassed };
-export type { RateLimitBinding, RateLimitKeyFunc };
+export type { RateLimitBinding, RateLimitKeyFunc, RateLimitVariables };

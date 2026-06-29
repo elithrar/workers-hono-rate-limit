@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { RateLimitBinding, rateLimit, rateLimitPassed } from "./index";
 
 // =============================================================================
@@ -181,6 +182,28 @@ describe("rateLimitPassed helper", () => {
 
 		await app.request("http://localhost/api/hello");
 		expect(rateLimitStatus).toBe(true);
+	});
+
+	it("returns false when request was rate limited before the handler runs", async () => {
+		const app = new Hono();
+		let rateLimitStatus: boolean | undefined;
+
+		const rateLimiter: MiddlewareHandler = (c, next) =>
+			rateLimit(createFailingRateLimiter(), () => "testKey")(c, next);
+
+		app.use("/api/*", rateLimiter);
+		app.onError((err, c) => {
+			rateLimitStatus = rateLimitPassed(c);
+			if (err instanceof HTTPException) {
+				return err.getResponse();
+			}
+			throw err;
+		});
+		app.get("/api/hello", (c) => c.text("Hello"));
+
+		const res = await app.request("http://localhost/api/hello");
+		expect(res.status).toBe(429);
+		expect(rateLimitStatus).toBe(false);
 	});
 
 	it("returns undefined when rate limiting middleware was not applied", async () => {

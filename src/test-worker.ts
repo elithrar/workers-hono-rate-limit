@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { rateLimit, wasRateLimited, RateLimitBinding } from "./index";
+import { rateLimit, rateLimitPassed, RateLimitBinding } from "./index";
 
 // Type for the test environment with rate limiter binding
 export interface Env {
@@ -19,8 +19,8 @@ app.use("/api/*", async (c, next) => {
 
 // Endpoint that checks if rate limited
 app.get("/api/hello", (c) => {
-	const rateLimited = wasRateLimited(c);
-	return c.json({ message: "Hello!", rateLimited });
+	const passed = rateLimitPassed(c);
+	return c.json({ message: "Hello!", rateLimitPassed: passed });
 });
 
 // Endpoint without rate limiting for comparison
