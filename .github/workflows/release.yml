@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    # Skip when npm credentials are not configured (e.g. PR branch tag pushes).
+    if: ${{ secrets.NPM_TOKEN != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify release tag is on main
+        id: release
+        run: |
+          git fetch origin main
+          if git merge-base --is-ancestor "${GITHUB_SHA}" "origin/main"; then
+            echo "on_main=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "on_main=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping npm publish: tag is not on main."
+          fi
+
+      - name: Use Node.js 22.x
+        if: steps.release.outputs.on_main == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "npm"
+          registry-url: https://registry.npmjs.org
+
+      - if: steps.release.outputs.on_main == 'true'
+        run: npm ci
+
+      - if: steps.release.outputs.on_main == 'true'
+        run: npm test
+
+      - if: steps.release.outputs.on_main == 'true'
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

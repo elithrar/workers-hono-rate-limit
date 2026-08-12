@@ -17,5 +17,6 @@ jobs:
           node-version: 22.x
           cache: "npm"
       - run: npm ci
-      - run: npm run build --if-present
+      - run: npm run format
+      - run: npm run build
       - run: npm test
