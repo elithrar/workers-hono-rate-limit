@@ -2,11 +2,21 @@ import { createMiddleware } from "hono/factory";
 import type { Context, MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
 
-const RATE_LIMIT_CONTEXT_KEY = ".rateLimited";
+const RATE_LIMIT_CONTEXT_KEY = "rateLimitPassed";
 const STATUS_TOO_MANY_REQUESTS = 429;
+export const DEFAULT_RATE_LIMIT_MESSAGE = "rate limited";
+
+/**
+ * Context variables set by the rate limiting middleware.
+ * Chain this middleware before handlers to access `c.var.rateLimitPassed`.
+ */
+export type RateLimitVariables = {
+	rateLimitPassed: boolean | undefined;
+};
 
 /**
  * Rate limiting binding as defined by Cloudflare Workers.
+ * Compatible with the `RateLimit` interface from `@cloudflare/workers-types`.
  * @see https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/
  */
 export interface RateLimitBinding {
@@ -20,11 +30,29 @@ export interface RateLimitBinding {
 export type RateLimitKeyFunc = (c: Context) => string | Promise<string>;
 
 /**
+ * Optional configuration for the rate limiting middleware.
+ */
+export interface RateLimitOptions {
+	/** Response body when a request is rate limited. Defaults to `"rate limited"`. */
+	message?: string;
+}
+
+const normalizeRateLimitKey = (rawKey: string): string => rawKey.trim();
+
+const resolveRateLimitMessage = (message: string | undefined): string => {
+	const trimmed = message?.trim();
+	return trimmed || DEFAULT_RATE_LIMIT_MESSAGE;
+};
+
+/**
  * Creates a rate limiting middleware for Hono applications.
  *
  * @param rateLimitBinding - The rate limit binding from your Worker's env
  * @param keyFunc - Function that returns the key to rate limit on
+ * @param options - Optional middleware configuration
  * @returns Hono middleware handler
+ * The broad call signature supports wrappers with application-specific bindings;
+ * the typed signature preserves variable inference in chained handlers.
  *
  * @example
  * ```ts
@@ -34,10 +62,13 @@ export type RateLimitKeyFunc = (c: Context) => string | Promise<string>;
  */
 export const rateLimit = (
 	rateLimitBinding: RateLimitBinding,
-	keyFunc: RateLimitKeyFunc
-): MiddlewareHandler => {
-	return createMiddleware(async (c, next) => {
-		const key = await keyFunc(c);
+	keyFunc: RateLimitKeyFunc,
+	options: RateLimitOptions = {},
+): MiddlewareHandler & MiddlewareHandler<{ Variables: RateLimitVariables }> => {
+	const message = resolveRateLimitMessage(options.message);
+
+	return createMiddleware<{ Variables: RateLimitVariables }>(async (c, next) => {
+		const key = normalizeRateLimitKey(await keyFunc(c));
 		if (!key) {
 			console.warn("the provided keyFunc returned an empty rate limiting key: bypassing rate limits");
 			await next();
@@ -48,9 +79,7 @@ export const rateLimit = (
 		c.set(RATE_LIMIT_CONTEXT_KEY, success);
 
 		if (!success) {
-			throw new HTTPException(STATUS_TOO_MANY_REQUESTS, {
-				res: new Response("rate limited", { status: STATUS_TOO_MANY_REQUESTS }),
-			});
+			throw new HTTPException(STATUS_TOO_MANY_REQUESTS, { message });
 		}
 
 		await next();
@@ -63,5 +92,5 @@ export const rateLimit = (
  * or undefined if the rate limiting middleware was not applied.
  */
 export const rateLimitPassed = (c: Context): boolean | undefined => {
-	return c.get(RATE_LIMIT_CONTEXT_KEY) as boolean | undefined;
+	return c.get(RATE_LIMIT_CONTEXT_KEY);
 };
