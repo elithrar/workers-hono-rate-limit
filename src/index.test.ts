@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, expectTypeOf, vi } from "vitest";
 import { Hono } from "hono";
 import type { MiddlewareHandler } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -227,6 +227,20 @@ describe("rateLimit middleware", () => {
 });
 
 describe("rateLimitPassed helper", () => {
+	it("infers the possibly absent state in chained handlers", async () => {
+		const app = new Hono().get(
+			"/api/hello",
+			rateLimit(createPassingRateLimiter(), () => "testKey"),
+			(c) => {
+				expectTypeOf(c.var.rateLimitPassed).toEqualTypeOf<boolean | undefined>();
+				return c.json({ passed: c.var.rateLimitPassed });
+			},
+		);
+
+		const res = await app.request("http://localhost/api/hello");
+		expect(await res.json()).toEqual({ passed: true });
+	});
+
 	it("returns true when request passed rate limiting", async () => {
 		const app = new Hono();
 		let rateLimitStatus: boolean | undefined;
@@ -396,13 +410,17 @@ describe("rateLimit integration behavior", () => {
 		}
 
 		const tracker = createTrackingRateLimiter(5);
-		const envApp = new Hono<{ Bindings: Env }>();
+		const envApp = new Hono<{ Bindings: Env; Variables: { requestId: string } }>();
 
 		envApp.use("/api/*", async (c, next) => {
+			c.set("requestId", "request-123");
 			const limiter = rateLimit(c.env.RATE_LIMITER, (c) => c.req.header("Authorization") || "anon");
 			return limiter(c, next);
 		});
-		envApp.get("/api/data", (c) => c.json({ data: "secret" }));
+		envApp.get("/api/data", (c) => {
+			expectTypeOf(c.var.requestId).toEqualTypeOf<string>();
+			return c.json({ data: "secret", passed: rateLimitPassed(c), requestId: c.var.requestId });
+		});
 
 		// Simulate the env being passed (as Cloudflare Workers does)
 		const env: Env = { RATE_LIMITER: tracker.limiter };
@@ -416,6 +434,7 @@ describe("rateLimit integration behavior", () => {
 		);
 
 		expect(res.status).toBe(200);
+		expect(await res.json()).toEqual({ data: "secret", passed: true, requestId: "request-123" });
 		expect(tracker.calls[0].key).toBe("Bearer token123");
 	});
 });

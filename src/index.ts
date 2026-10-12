@@ -11,7 +11,7 @@ export const DEFAULT_RATE_LIMIT_MESSAGE = "rate limited";
  * Chain this middleware before handlers to access `c.var.rateLimitPassed`.
  */
 export type RateLimitVariables = {
-	rateLimitPassed: boolean;
+	rateLimitPassed: boolean | undefined;
 };
 
 /**
@@ -51,6 +51,8 @@ const resolveRateLimitMessage = (message: string | undefined): string => {
  * @param keyFunc - Function that returns the key to rate limit on
  * @param options - Optional middleware configuration
  * @returns Hono middleware handler
+ * The broad call signature supports wrappers with application-specific bindings;
+ * the typed signature preserves variable inference in chained handlers.
  *
  * @example
  * ```ts
@@ -62,7 +64,7 @@ export const rateLimit = (
 	rateLimitBinding: RateLimitBinding,
 	keyFunc: RateLimitKeyFunc,
 	options: RateLimitOptions = {},
-): MiddlewareHandler<{ Variables: RateLimitVariables }> => {
+): MiddlewareHandler & MiddlewareHandler<{ Variables: RateLimitVariables }> => {
 	const message = resolveRateLimitMessage(options.message);
 
 	return createMiddleware<{ Variables: RateLimitVariables }>(async (c, next) => {
@@ -89,6 +91,6 @@ export const rateLimit = (
  * Returns true if the request was allowed through, false if it was rate limited,
  * or undefined if the rate limiting middleware was not applied.
  */
-export const rateLimitPassed = (c: Context<{ Variables: RateLimitVariables }>): boolean | undefined => {
+export const rateLimitPassed = (c: Context): boolean | undefined => {
 	return c.get(RATE_LIMIT_CONTEXT_KEY);
 };

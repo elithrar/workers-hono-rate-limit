@@ -10,17 +10,22 @@ permissions:
 
 jobs:
   publish:
-    # Skip when npm credentials are not configured (e.g. PR branch tag pushes).
-    if: ${{ secrets.NPM_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Verify release tag is on main
         id: release
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          if [ -z "$NPM_TOKEN" ]; then
+            echo "on_main=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping npm publish: credentials are not configured."
+            exit 0
+          fi
           git fetch origin main
           if git merge-base --is-ancestor "${GITHUB_SHA}" "origin/main"; then
             echo "on_main=true" >> "$GITHUB_OUTPUT"
@@ -31,7 +36,7 @@ jobs:
 
       - name: Use Node.js 22.x
         if: steps.release.outputs.on_main == 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22.x
           cache: "npm"

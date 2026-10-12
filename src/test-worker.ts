@@ -1,11 +1,7 @@
 import { Hono } from "hono";
-import { rateLimit, rateLimitPassed, RateLimitBinding } from "./index";
+import { rateLimit, rateLimitPassed } from "./index";
 
-export interface Env {
-	RATE_LIMITER: RateLimitBinding;
-}
-
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Cloudflare.Env }>();
 
 app.use("/api/*", async (c, next) => {
 	const rateLimiter = rateLimit(c.env.RATE_LIMITER, (c) => c.req.header("Authorization") || "");

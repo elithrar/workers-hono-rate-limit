@@ -6,6 +6,7 @@
 	"scripts": {
 		"test": "vitest run",
 		"build": "unbuild",
+		"typecheck": "tsc --noEmit",
 		"format": "prettier --check .",
 		"format:fix": "prettier --write .",
 		"prepublishOnly": "npm run build"
@@ -42,12 +43,13 @@
 		"hono": ">=4.4.0"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.16.20",
-		"@cloudflare/workers-types": "^4.20260629.1",
-		"hono": "^4.12.27",
-		"prettier": "^3.6.2",
+		"@cloudflare/vitest-plugin": "^1.4.0",
+		"@cloudflare/workers-types": "^5.20261012.1",
+		"hono": "^4.13.13",
+		"prettier": "^3.9.10",
+		"typescript": "^5.9.3",
 		"unbuild": "^3.6.1",
-		"vitest": "^4.1.9",
-		"wrangler": "^4.105.0"
+		"vitest": "^5.0.3",
+		"wrangler": "^4.149.0"
 	}
 }

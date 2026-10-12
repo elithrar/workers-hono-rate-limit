@@ -1,7 +1,7 @@
 {
 	"name": "workers-hono-rate-limit-test",
 	"main": "src/test-worker.ts",
-	"compatibility_date": "2025-06-29",
+	"compatibility_date": "2026-10-06",
 	"ratelimits": [
 		{
 			"name": "RATE_LIMITER",

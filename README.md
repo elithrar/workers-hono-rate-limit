@@ -4,7 +4,7 @@
 
 Hono middleware for Cloudflare Worker's [rate limiting bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/).
 
-Tested with Hono 4.12.x. Requires Hono `>=4.4.0` for `createMiddleware` variable typing.
+Tested with Hono 4.13.x. Requires Hono `>=4.4.0` for `createMiddleware` variable typing.
 
 ## Install
 
@@ -96,6 +96,20 @@ Handlers chained after the middleware can read `c.var.rateLimitPassed`, or use t
 - Avoid using IP addresses or locations as keys—these can be shared by many users.
 - If your `keyFunc` returns an empty or whitespace-only string, rate limiting is **bypassed** for that request (with a console warning). Keys are trimmed before being passed to the rate limiter.
 - To rate limit unauthenticated traffic, return a fixed bucket name instead of an empty string — for example `(c) => c.req.header("Authorization") || "unauthenticated"`.
+
+## Development
+
+Use Node.js 22.12+ (or a supported newer Node.js release) and npm:
+
+```sh
+npm ci
+npm run format
+npm run typecheck
+npm run build
+npm test
+```
+
+After changing the test Worker configuration, regenerate its bindings with `npx wrangler types src/env.d.ts --include-runtime=false`.
 
 ## License
 
